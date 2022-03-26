@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
+    <script src="{{ asset('assets/js/axios.min.js') }}"></script>
+    <script src="{{ asset('assets/js/jquery.js') }}"></script>
+</head>
+<body>
+
+
+<br><br><br>
+
+<div class="container">
+    <div class="table-responsive" id="tbl_wrap">
+        <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">name</th>
+                <th scope="col">email</th>
+              </tr>
+            </thead>
+            <tbody id="tbl_id"></tbody>
+        </table>
+        <div id="pagin"></div>
+    </div>
+</div>
+
+<script>
+// current_page: 1
+// data: (20) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+// first_page_url: "http://localhost:8000/ajax/pagin?page=1"
+// from: 1
+// last_page: 50
+// last_page_url: "http://localhost:8000/ajax/pagin?page=50"
+// links: (15) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+// next_page_url: "http://localhost:8000/ajax/pagin?page=2"
+// path: "http://localhost:8000/ajax/pagin"
+// per_page: 20
+// prev_page_url: null
+// to: 20
+// total: 1000
+
+
+let tbl_id = $('#tbl_id');
+let pagin = $('#pagin');
+let url = `{{ route("ajax.pagin") }}`;
+
+function loadData(url_param) {
+    pagin.html(`
+        <div class="spinner-border text-success" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    `);
+    axios.get(url_param)
+            .then((res) => {
+                let data = res.data;
+                let data_items = data.data;
+
+                let index = data.from;
+                let html = '';
+                data_items.forEach((item) => {
+                    html += `
+                            <tr>
+                                <th scope="row">${index++}</th>
+                                <td>${item.name}</td>
+                                <td>${item.email}</td>
+                            </tr>
+                        `;
+                });
+                tbl_id.html(html);
+    
+                let links = '<ul class="pagination">';
+                data.links.forEach((item) => {
+                    links += `<li class="page-item ${(item.active) ? 'active' : ''} ${(!item.url) ? 'disabled' : ''}"><a class="page-link" href="javascript:void(0)" link="${(item.url) ? item.url : '#'}">${item.label}</a></li>`;
+                });
+                links += '</ul>';
+                pagin.html(links);
+                callLinks();
+            })
+            .catch((err) => console.log(err));
+}
+loadData(url);
+
+
+function callLinks() {
+    let a = pagin.find('a');
+    a.click(function() {
+        let link_url = $(this).attr('link');
+        if (link_url !== "#") {
+            loadData(link_url);
+        }
+    })
+}
+</script>
+
+
+
+</body>
+</html>
